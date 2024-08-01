@@ -1,0 +1,266 @@
+<% layout("layouts/boilerplate") %>
+
+<div class="row">
+    <div class="col-4">
+        <div class="row">
+            <div class="col-12 mb-3">
+                <div id="poll-carousel" class="carousel slide">
+                    <div class="carousel-inner">
+                        <% for (let i = 0; i < poll.images.length; ++i) { %>
+                        <div class="carousel-item <%= i === 0 ? "active" : "" %>">
+                            <img src="<%= (((poll.images)[i]).url).replace("/upload", "/upload/w_1280,h_720,c_fill") %>"
+                                class="d-block w-100" alt="">
+                        </div>
+                        <% } %>
+
+                        <% if (poll.images.length === 0) { %>
+                        <div class="carousel-item" active>
+                            <img src="<%= "https://res.cloudinary.com/dyhzti25i/image/upload/v1717773936/Online-Voting-System/0_fqcbnb.jpg".replace("/upload", "/upload/w_1280,h_720,c_fill") %>"
+                                class="d-block w-100" alt="">
+                        </div>
+                        <% } %>
+                    </div>
+
+                    <% if (poll.images.length > 1) { %>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#poll-carousel"
+                        data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+
+                    <button class="carousel-control-next" type="button" data-bs-target="#poll-carousel"
+                        data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                    <% } %>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><%= poll.title %></h5>
+                        <p class="card-text"><%= poll.description %></p>
+                    </div>
+
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Added by <%= poll.organiser.username %></li>
+                    </ul>
+
+                    <% if ((current_user) && (poll.organiser.equals(current_user))) { %>
+                    <div class="card-body">
+                        <% if (!(poll.concluded)) { %>
+                        <a class="card-link btn btn-primary" href="/polls/<%= poll._id %>/conclude">Conclude</a>
+                        <a class="ms-1 card-link btn btn-info" href="/polls/<%= poll._id %>/edit">Edit</a>
+                        <% } %>
+
+                        <form class="ms-1 d-inline" action="/polls/<%= poll._id %>?_method=DELETE" method="POST">
+                            <button class="btn btn-danger">Delete</button>
+                        </form>
+
+                        <% if (!(poll.anyone_can_vote)) { %>
+                        <a class="ms-1 card-link btn btn-warning" data-bs-toggle="collapse" href="#eligible-voters"
+                            role="button" aria-expanded="false" aria-controls="eligible-voters">
+                            Eligible Voters
+                        </a>
+                        <% } %>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <% if ((current_user) && (poll.organiser.equals(current_user)) && !(poll.anyone_can_vote)) { %>
+            <div class="col-12 mb-3">
+                <div class="collapse" id="eligible-voters">
+                    <div class="card">
+                        <ul class="list-group list-group-flush">
+                            <% for (let voter of poll.voters) { %>
+                            <li class="list-group-item"><%= voter.username %></li>
+                            <% } %>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <% } %>
+        </div>
+    </div>
+
+    <div class="col-4">
+        <div class="row">
+            <% if ((current_user) && ((poll.organiser.equals(current_user)) || (poll.anyone_can_vote) || (current_user_is_eligible))) { %>
+            <% for (let x = 0; x < poll.candidates.length; ++x) { %>
+            <div class="col-6 mb-3">
+                <div class="card">
+                    <div id="candidates-<%= x %>-carousel" class="carousel slide">
+                        <div class="carousel-inner">
+                            <% for (let i = 0; i < poll.candidates[x].images.length; ++i) { %>
+                            <div class="carousel-item <%= i === 0 ? "active" : "" %>">
+                                <img src="<%= (((poll.candidates[x].images)[i]).url).replace("/upload", "/upload/w_1280,h_720,c_fill") %>"
+                                    class="d-block w-100" alt="">
+                            </div>
+                            <% } %>
+
+                            <% if (poll.candidates[x].images.length === 0) { %>
+                            <div class="carousel-item active">
+                                <img src="<%= "https://res.cloudinary.com/dyhzti25i/image/upload/v1717773936/Online-Voting-System/0_fqcbnb.jpg".replace("/upload", "/upload/w_1280,h_720,c_fill") %>"
+                                    class="d-block w-100" alt="">
+                            </div>
+                            <% } %>
+                        </div>
+
+                        <% if (poll.candidates[x].images.length > 1) { %>
+                        <button class="carousel-control-prev" type="button"
+                            data-bs-target="#candidates-<%= x %>-carousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+
+                        <button class="carousel-control-next" type="button"
+                            data-bs-target="#candidates-<%= x %>-carousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                        <% } %>
+                    </div>
+
+                    <div class="card-body">
+                        <h5 class="card-title"><%= x + 1 %>. <%= poll.candidates[x].title %></h5>
+                        <p class="card-text"><%= poll.candidates[x].description %></p>
+                    </div>
+                </div>
+            </div>
+            <% } %>
+            <% } %>
+
+            <% if (!(poll.concluded) && (current_user) && (((poll.organiser.equals(current_user)) && (poll.organiser_can_vote)) || (!(poll.organiser.equals(current_user)) && ((poll.anyone_can_vote) || (current_user_is_eligible)))) && !(current_user_has_already_voted)) { %>
+            <div class="col-12 mt-1 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Cast a vote!</h5>
+
+                        <form action="/polls/<%= poll._id %>/votes" method="POST" id="vote-form">
+                            <% for (let x = 0; x < poll.candidates.length; ++x) { %>
+                            <input class="btn-check" type="<%= poll.multiple_votes_allowed ? "checkbox" : "radio" %>"
+                                id="candidates-<%= x %>"
+                                name="<%= poll.multiple_votes_allowed ? `candidates-${x}` : "candidate" %>"
+                                <%= poll.multiple_votes_allowed ? "" : `value=${x}` %> autocomplete="off">
+
+                            <label class="btn btn-outline-primary mb-3 me-1" for="candidates-<%= x %>">
+                                <%= x + 1 %>. <%= poll.candidates[x].title %>
+                            </label>
+                            <% } %>
+
+                            <div>
+                                <span class="btn btn-success" id="submit-vote">Submit</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <% } %>
+
+            <% if ((current_user) && ((poll.organiser.equals(current_user)) || (poll.anyone_can_vote) || (current_user_is_eligible))) { %>
+            <% if (((poll.concluded) || (poll.ongoing_poll_results_visible)) && !(poll.anonymous_votes)) { %>
+            <div class="col-12 mt-1 mb-3">
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button">
+                                All Votes
+                            </button>
+                        </h2>
+                    </div>
+
+                    <% for (let i = 0; i < poll.candidates.length; ++i) { %>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" id="collapse-candidates-<%= i %>-button"
+                                type="button" data-bs-toggle="collapse" data-bs-target="#collapse-candidates-<%= i %>">
+                                <%= i + 1 %>. <%= poll.candidates[i].title %>
+                            </button>
+                        </h2>
+
+                        <div id="collapse-candidates-<%= i %>" class="accordion-collapse collapse"
+                            data-bs-parent="#collapse-candidates-<%= i %>-button">
+                            <div class="accordion-body">
+                                <ul class="list-group list-group-flush">
+                                    <% for (let vote of poll.votes) { %>
+                                    <% if (poll.candidates[i].equals(vote.candidate)) { %>
+                                    <li class="list-group-item"><%= vote.voter.username %></li>
+                                    <% } %>
+                                    <% } %>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+            <% } %>
+            <% } %>
+        </div>
+    </div>
+
+    <div class="col-4">
+        <div class="row">
+            <% if ((current_user) && ((poll.organiser.equals(current_user)) || (poll.anyone_can_vote) || (current_user_is_eligible))) { %>
+            <div class="col-12 mb-3">
+                <% if ((poll.concluded) || (poll.ongoing_poll_results_visible)) { %>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Results</h5>
+
+                        <div>
+                            <canvas id="results-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <% } else { %>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-0">The results will be available after the poll has been concluded!
+                        </h5>
+                    </div>
+                </div>
+                <% } %>
+            </div>
+            <% } %>
+
+            <% if ((current_user) && (((poll.organiser.equals(current_user)) && (poll.organiser_can_vote)) || (!(poll.organiser.equals(current_user)) && ((poll.anyone_can_vote) || (current_user_is_eligible)))) && (current_user_has_already_voted)) { %>
+            <div class="col-12 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-0">Past Votes (by you)</h5>
+                    </div>
+
+                    <ul class="list-group list-group-flush d-flex">
+                        <% for (let i = 0; i < current_user_voted_for.length; ++i) { %>
+                        <li class="list-group-item">
+                            <% if (!(poll.concluded)) { %>
+                            <form class="me-2 d-inline"
+                                action="/polls/<%= poll._id %>/votes/<%= current_user_voted_for_ids[i] %>?_method=DELETE"
+                                method="POST">
+                                <button class="btn btn-danger">Delete</button>
+                            </form>
+                            <% } %>
+
+                            <%= current_user_voted_for[i] + 1 %>.
+                            <%= poll.candidates[current_user_voted_for[i]].title %>
+                        </li>
+                        <% } %>
+                    </ul>
+                </div>
+            </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<script>
+    const number_of_candidates = <%= poll.candidates.length %>;
+    const poll = <%- JSON.stringify(poll) %>;
+</script>
+
+<script src="/scripts/ensure-stuff-2.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/scripts/results-chart.js"></script>
